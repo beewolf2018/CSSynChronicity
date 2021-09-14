@@ -31,6 +31,12 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Icons\program icons\icon.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>CSSynChronicity.Program</StartupObject>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -45,14 +51,77 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Branding.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
+    <Compile Include="Interaction.cs" />
+    <Compile Include="Interface\AboutForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Interface\AboutForm.Designer.cs">
+      <DependentUpon>AboutForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Interface\LanguageForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Interface\LanguageForm.Designer.cs">
+      <DependentUpon>LanguageForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Interface\MainForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Interface\MainForm.Designer.cs">
+      <DependentUpon>MainForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Interface\SchedulingForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Interface\SchedulingForm.Designer.cs">
+      <DependentUpon>SchedulingForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Interface\SettingsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Interface\SettingsForm.Designer.cs">
+      <DependentUpon>SettingsForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Interface\SynchronizeForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Interface\SynchronizeForm.Designer.cs">
+      <DependentUpon>SynchronizeForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="LanguageHandler.cs" />
+    <Compile Include="Logs.cs" />
+    <Compile Include="MessageLoop.cs" />
+    <Compile Include="ProfileSettings.cs" />
     <Compile Include="Program.cs" />
+    <Compile Include="ProgramSetting.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SyncingStructures.cs" />
+    <Compile Include="Utilities.cs" />
+    <EmbeddedResource Include="Form1.resx">
+      <DependentUpon>Form1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Interface\LanguageForm.resx">
+      <DependentUpon>LanguageForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Interface\MainForm.resx">
+      <DependentUpon>MainForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Interface\SchedulingForm.resx">
+      <DependentUpon>SchedulingForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Interface\SettingsForm.resx">
+      <DependentUpon>SettingsForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Interface\SynchronizeForm.resx">
+      <DependentUpon>SynchronizeForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -61,7 +130,44 @@
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
     </Compile>
+    <None Include="Icons\program icons\archive\create-synchronicity-logo-1.ai" />
+    <None Include="Icons\program icons\archive\create-synchronicity-logo-2.ai" />
+    <None Include="Icons\program icons\archive\create-synchronicity-logo-2_1.ai" />
+    <None Include="Icons\program icons\create-synchronicity-icon-16x16.ai" />
+    <None Include="Icons\program icons\create-synchronicity-icon-32x32.ai" />
+    <None Include="Icons\program icons\create-synchronicity-icon-48x48.ai" />
+    <None Include="Icons\program icons\create-synchronicity-icon-64x64.ai" />
+    <None Include="Icons\program icons\create-synchronicity-logo-128x128.ai" />
+    <None Include="languages\amharic.lng" />
+    <None Include="languages\build_languageupdate.bat" />
+    <None Include="languages\bulgarian.lng" />
+    <None Include="languages\catalan.lng" />
+    <None Include="languages\chinese %28simplified%29.lng" />
+    <None Include="languages\chinese %28traditional%29.lng" />
+    <None Include="languages\czech.lng" />
+    <None Include="languages\danish.lng" />
+    <None Include="languages\dutch.lng" />
+    <None Include="languages\english.lng" />
+    <None Include="languages\estonian.lng" />
+    <None Include="languages\french.lng" />
+    <None Include="languages\german.lng" />
+    <None Include="languages\greek.lng" />
+    <None Include="languages\hebrew.lng" />
+    <None Include="languages\hungarian.lng" />
+    <None Include="languages\indonesian.lng" />
+    <None Include="languages\italian.lng" />
+    <None Include="languages\japanese.lng" />
+    <None Include="languages\korean.lng" />
+    <None Include="languages\norwegian.lng" />
+    <None Include="languages\polish.lng" />
+    <None Include="languages\portuguese.lng" />
+    <None Include="languages\russian.lng" />
+    <None Include="languages\slovene.lng" />
+    <None Include="languages\spanish.lng" />
+    <None Include="languages\swedish.lng" />
+    <None Include="languages\turkish.lng" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -74,6 +180,76 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="icon.ico" />
+    <Content Include="Icons\applications-system.png" />
+    <Content Include="Icons\clock-xs.png" />
+    <Content Include="Icons\clock-xs.svg" />
+    <Content Include="Icons\clock.png" />
+    <Content Include="Icons\clock.svg" />
+    <Content Include="Icons\document-new.png" />
+    <Content Include="Icons\edit-delete.png" />
+    <Content Include="Icons\edit-redo-add.png" />
+    <Content Include="Icons\edit-redo.png" />
+    <Content Include="Icons\edit-select-all.png" />
+    <Content Include="Icons\emblem-favorite.png" />
+    <Content Include="Icons\features\advanced patterns.png" />
+    <Content Include="Icons\features\advanced selection options.png" />
+    <Content Include="Icons\features\easy configuration.png" />
+    <Content Include="Icons\features\easy scheduling.png" />
+    <Content Include="Icons\features\intuitive interface.png" />
+    <Content Include="Icons\folder.png" />
+    <Content Include="Icons\format-justify-fill.png" />
+    <Content Include="Icons\help-browser.png" />
+    <Content Include="Icons\list icons\create-folder.svg" />
+    <Content Include="Icons\list icons\delete-folder.png" />
+    <Content Include="Icons\list icons\delete-folder.svg" />
+    <Content Include="Icons\list icons\flare.png" />
+    <Content Include="Icons\list icons\folder-new.png" />
+    <Content Include="Icons\list icons\go-next-upd.png" />
+    <Content Include="Icons\list icons\go-next.png" />
+    <Content Include="Icons\list icons\go-previous-upd.png" />
+    <Content Include="Icons\list icons\go-previous.png" />
+    <Content Include="Icons\list icons\list-remove.png" />
+    <Content Include="Icons\list-add.png" />
+    <Content Include="Icons\media-playback-start.png" />
+    <Content Include="Icons\preferences-desktop-locale.png" />
+    <Content Include="Icons\preferences-system.png" />
+    <Content Include="Icons\printer.png" />
+    <Content Include="Icons\process-stop.png" />
+    <Content Include="Icons\program icons\archive\create-synchronicity-logo-2.png" />
+    <Content Include="Icons\program icons\archive\create-synchronicity-logo-2_1.png" />
+    <Content Include="Icons\program icons\create-synchronicity-icon-16x16.ico" />
+    <Content Include="Icons\program icons\create-synchronicity-icon-16x16.png" />
+    <Content Include="Icons\program icons\create-synchronicity-icon-32x32.ico" />
+    <Content Include="Icons\program icons\create-synchronicity-icon-32x32.png" />
+    <Content Include="Icons\program icons\create-synchronicity-icon-48x48.ico" />
+    <Content Include="Icons\program icons\create-synchronicity-icon-48x48.png" />
+    <Content Include="Icons\program icons\create-synchronicity-icon-64x64.png" />
+    <Content Include="Icons\program icons\create-synchronicity-icon-allsizes.ico" />
+    <Content Include="Icons\program icons\create-synchronicity-icon.ico" />
+    <Content Include="Icons\program icons\create-synchronicity-logo-128x128.png" />
+    <Content Include="Icons\program icons\create-synchronicity-logo-96x96.png" />
+    <None Include="Resources\Icon2.ico" />
+    <None Include="Resources\Icon1.ico" />
+    <EmbeddedResource Include="Icons\program icons\icon-16x16.ico" />
+    <EmbeddedResource Include="Icons\program icons\icon.ico" />
+    <Content Include="Icons\system-search.png" />
+    <Content Include="Icons\unused\go-next-orange.svg" />
+    <Content Include="Icons\unused\go-next-yellow-s.svg" />
+    <Content Include="Icons\unused\go-next-yellow.png" />
+    <Content Include="Icons\unused\go-next-yellow.svg" />
+    <Content Include="Icons\unused\go-previous-yellow-s.svg" />
+    <Content Include="Icons\unused\go-previous-yellow.png" />
+    <Content Include="Icons\unused\go-previous-yellow.svg" />
+    <Content Include="Icons\view-refresh-22.png" />
+    <Content Include="Icons\view-refresh-32.png" />
+    <Content Include="Icons\x-office-spreadsheet.png" />
+    <Content Include="languages\cultures.txt" />
+    <Content Include="languages\language_update.vb" />
+    <Content Include="languages\local-names.txt" />
+    <Content Include="languages\TODO.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
