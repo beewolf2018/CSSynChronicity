@@ -6,6 +6,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
+using log4net;
+
 
 namespace CSSynChronicity
 {
@@ -47,13 +49,15 @@ namespace CSSynChronicity
 
         public const int AppLogThreshold = 1 << 23; //'8 MB
 
-        public const string RegistryBootVal = "Create Synchronicity - Scheduler";
+        public const string RegistryBootVal = "Beewolf CS Synchronicity - Scheduler";
         public const string RegistryBootKey = "Software\\Microsoft\\Windows\\CurrentVersion\\Run";
         public const string RegistryRootedBootKey = "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run";
     }
 
     public class ConfigHandler
     {
+
+        ILog log;
         private static ConfigHandler Singleton;
 
         public string LogRootDir;
@@ -74,6 +78,11 @@ namespace CSSynChronicity
 
         public ConfigHandler()
         {
+            log4net.Config.XmlConfigurator.Configure();
+            log = LogManager.GetLogger(typeof(ConfigHandler));
+            log.Info("ConfigHandler程序初始化开始!");
+
+
             LogRootDir = GetUserFilesRootDir() + ProgramSetting.LogFolderName;
             ConfigRootDir = GetUserFilesRootDir() + ProgramSetting.ConfigFolderName;
             LanguageRootDir = Application.StartupPath + ProgramSetting.DirSep + "languages";
@@ -296,7 +305,7 @@ namespace CSSynChronicity
                 {
                     using (StreamWriter AppLog = new StreamWriter(AppLogFile, true))
                     {
-                        AppLog.WriteLine(String.Format("[{0}][{1}] {2}", UniqueID, DateTime.Now.ToString(), EventData.Replace(Environment.NewLine, " // ")));
+                        log.Info(String.Format("[{0}][{1}] {2}", UniqueID, DateTime.Now.ToString(), EventData.Replace(Environment.NewLine, " // ")));
 
                     };
 
@@ -310,7 +319,7 @@ namespace CSSynChronicity
 
         public  void RegisterBoot()
         {
-            if(GetProgramSetting(ProgramSetting.AutoStartupRegistration, "True")== "True")
+            if(GetProgramSetting(ProgramSetting.AutoStartupRegistration,true))
             {
                 if(Microsoft.Win32.Registry.GetValue(ProgramSetting.RegistryRootedBootKey, ProgramSetting.RegistryBootVal, null)==null)
                 {
@@ -362,7 +371,7 @@ namespace CSSynChronicity
 
         public static void ReadArgs(List<string> ArgsList)
         {
-            ConfigHandler ProgramConfig = new ConfigHandler();
+            ConfigHandler ProgramConfig = ConfigHandler.GetSingleton();
             ProgramConfig.LogDebugEvent("Parsing command line settings");
 
             foreach (string Param in ArgsList)

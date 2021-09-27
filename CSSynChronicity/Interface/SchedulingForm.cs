@@ -49,7 +49,7 @@ namespace CSSynChronicity.Interface
             }
             catch (Exception ex)
             {
-                Interaction.ShowMsg(Translation.Translate(@"\REG_ERROR"), Translation.Translate(@"\ERROR"), MessageBoxButtons.OK, MessageBoxIcon.Error);
+                //Interaction.ShowMsg(Translation.Translate(@"\REG_ERROR"), Translation.Translate(@"\ERROR"), MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
             this.Close();
@@ -78,7 +78,7 @@ namespace CSSynChronicity.Interface
 
                 default:
                     {
-                        Time.Value = new DateTime(2011, 1, 1, Handler.Scheduler.Hour, Handler.Scheduler.Minute, 0);
+                        Time.Value = new DateTime(2021, 1, 1, Handler.Scheduler.Hour, Handler.Scheduler.Minute, 0);
 
                         switch (Handler.Scheduler.Frequency)
                         {
@@ -108,6 +108,25 @@ namespace CSSynChronicity.Interface
             }
 
             Handler.CopySetting(ProfileSetting.CatchUpSync, Catchup.Checked, true);
+        }
+
+        private void Cancel_Click(object sender, EventArgs e)
+        {
+            this.Close();
+        }
+
+        private void Enable_CheckedChanged(object sender, EventArgs e)
+        {
+            //Panel.Enabled = Enable.Checked;
+            Catchup.Enabled = Enable.Checked;
+            TimeSelectionPanel.Enabled = Enable.Checked;
+        }
+
+        private void Enable_CheckedChanged_1(object sender, EventArgs e)
+        {
+            //Panel.Enabled = Enable.Checked;
+            Catchup.Enabled = Enable.Checked;
+            TimeSelectionPanel.Enabled = Enable.Checked;
         }
     }
 }

@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Drawing;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.IO;
-
+using System.Windows.Forms;
+using log4net;
 
 namespace CSSynChronicity
 {
@@ -66,6 +62,7 @@ namespace CSSynChronicity
 
     public class ProfileHandler
     {
+        ILog log;
         public string ProfileName;
         public bool IsNewProfile;
         public ScheduleInfo Scheduler = new ScheduleInfo();
@@ -86,6 +83,10 @@ namespace CSSynChronicity
 
         public ProfileHandler(string Name)
         {
+            log4net.Config.XmlConfigurator.Configure();
+            log = LogManager.GetLogger(typeof(MessageLoop));
+            log.Info("ProfileHandler程序初始化开始!");
+
             ProfileName = Name;
 
             ConfigPath = ProgramConfig.GetConfigPath(Name);
@@ -96,16 +97,16 @@ namespace CSSynChronicity
 
             // 'Never use GetSetting(Of SyncMethod). It searches the config file for a string containing an int (eg "0"),
             //but when failing it calls SetSettings which saves a string containing an enum label (eg. "LRIncremental")
-            if(GetSetting(ProfileSetting.Method, ProfileSetting.DefaultMethod) != (int)ProfileSetting.SyncMethod.LRMirror)
+            if (GetSetting(ProfileSetting.Method, ProfileSetting.DefaultMethod) != (int)ProfileSetting.SyncMethod.LRMirror)
             {
                 SetSetting(ProfileSetting.StrictMirror, false);
                 SetSetting(ProfileSetting.DiscardAfter, 0);
             }
-            if(GetSetting(ProfileSetting.PostSyncAction,"") != "")
+            if (GetSetting(ProfileSetting.PostSyncAction, "") != "")
             {
                 SetSetting(ProfileSetting.ErrorsLog, true);
             }
-            if(GetSetting(ProfileSetting.MayCreateDestination, false) && GetSetting(ProfileSetting.RightSubFolders, "") == "")
+            if (GetSetting(ProfileSetting.MayCreateDestination, false) && GetSetting(ProfileSetting.RightSubFolders, "") == "")
             {
                 SetSetting(ProfileSetting.RightSubFolders, "*");
             }
@@ -126,7 +127,7 @@ namespace CSSynChronicity
                     if (Param.Length < 2)
                     {
                         //Interaction.ShowMsg(Translation.TranslateFormat("\INVALID_SETTING", ConfigLine))
-                        ProgramConfig.LogAppEvent("Invalid setting for profile '" + ProfileName + "': " + ConfigLine);
+                        log.Info("Invalid setting for profile '" + ProfileName + "': " + ConfigLine);
                     }
                     else if (!Configuration.ContainsKey(Param[0]))
                     {
@@ -146,7 +147,7 @@ namespace CSSynChronicity
             Subfolders.Clear();
             List<string> ConfigCheckedFoldersList = new List<string>(GetSetting(ConfigLine, "").Split(';'));
             ConfigCheckedFoldersList.RemoveAt(ConfigCheckedFoldersList.Count - 1);
-            foreach(string Dir in ConfigCheckedFoldersList)
+            foreach (string Dir in ConfigCheckedFoldersList)
             {
                 bool Recursive = false;
                 string dir = Dir;
@@ -164,7 +165,7 @@ namespace CSSynChronicity
         {
             string[] Opts = GetSetting(ProfileSetting.Scheduling, "").Split(";".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
 
-            if(Opts.GetLength(0) == ProfileSetting.SchedulingSettingsCount )
+            if (Opts.GetLength(0) == ProfileSetting.SchedulingSettingsCount)
             {
                 Scheduler = new ScheduleInfo(Opts[0], Opts[1], Opts[2], Opts[3], Opts[4]);
             }
@@ -189,22 +190,22 @@ namespace CSSynChronicity
             }
             catch (Exception ex)
             {
-                ProgramConfig.LogAppEvent("Unable to save config file for " + ProfileName + Environment.NewLine + ex.ToString());
+                log.Info("Unable to save config file for " + ProfileName + Environment.NewLine + ex.ToString());
                 return false;
             }
         }
 
 
         //    ' `ReturnString` is used to pass locally generated error messages to caller.
-        public bool ValidateConfigFile(bool WarnUnrootedPaths  = false, bool TryCreateDest = false, string FailureMsg ="")
+        public bool ValidateConfigFile(bool WarnUnrootedPaths = false, bool TryCreateDest = false, string FailureMsg = "")
         {
             bool IsValid = true;
             List<string> InvalidListing = new List<string>();
             string Dest = TranslatePath(GetSetting<string>(ProfileSetting.Destination));
             bool NeedsWakeup = true;// 'Static, but not shared.
 
-            string Action = this.GetSetting(ProfileSetting.WakeupAction,"");
-            if(NeedsWakeup && ProgramConfig.GetProgramSetting(ProgramSetting.ExpertMode, false) && Action !=  "")
+            string Action = this.GetSetting(ProfileSetting.WakeupAction, "");
+            if (NeedsWakeup && ProgramConfig.GetProgramSetting(ProgramSetting.ExpertMode, false) && Action != "")
             {
                 try
                 {
@@ -212,10 +213,10 @@ namespace CSSynChronicity
                     System.Diagnostics.Process.Start(Action, Dest).WaitForExit();
                     NeedsWakeup = false;
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
-                    Interaction.ShowMsg(Translation.Translate("\\WAKEUP_FAILED"));
-                    ProgramConfig.LogAppEvent(ex.ToString());
+                    //Interaction.ShowMsg(Translation.Translate("\\WAKEUP_FAILED"));
+                    log.Info(ex.ToString());
                     IsValid = false;
                 }
             }
@@ -228,24 +229,24 @@ namespace CSSynChronicity
             //        'TryCreateDest <=> When this function returns, the folder should exist.
             //        'MayCreateDest <=> Creating the destination folder is allowed for this folder.
             bool MayCreateDest = GetSetting(ProfileSetting.MayCreateDestination, false);
-            if(MayCreateDest && TryCreateDest)
+            if (MayCreateDest && TryCreateDest)
             {
                 try { Directory.CreateDirectory(Dest); }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     InvalidListing.Add(Translation.TranslateFormat("\\FOLDER_FAILED", Dest, ex.Message));
                 }
             }
 
-            if(!Directory.Exists(Dest) && (TryCreateDest || (! MayCreateDest)))
+            if (!Directory.Exists(Dest) && (TryCreateDest || (!MayCreateDest)))
             {
                 InvalidListing.Add(Translation.Translate("\\INVALID_DEST"));
                 IsValid = false;
             }
 
-            foreach(string Key in RequiredSettings)
+            foreach (string Key in RequiredSettings)
             {
-                if(!Configuration.ContainsKey(Key))
+                if (!Configuration.ContainsKey(Key))
                 {
                     IsValid = false;
                     InvalidListing.Add(Translation.TranslateFormat("\\SETTING_UNSET", Key));
@@ -262,42 +263,42 @@ namespace CSSynChronicity
             //                InvalidListing.Add(String.Format("{0} not found!", ProgramConfig.CompressionDll))
             //            End If
             //        End If
-            if(!IsValid)
+            if (!IsValid)
             {
                 string ErrorsList = string.Join(Environment.NewLine, InvalidListing.ToArray());
                 string ErrMsg = String.Format("{0} - {1}{2}{3}", ProfileName, Translation.Translate("\\INVALID_CONFIG"), Environment.NewLine, ErrorsList);
                 //string ErrMsg = String.Format("{0} - {1}{2}{3}", ProfileName, "INVALID_CONFIG", Environment.NewLine, ErrorsList);
-                if (! (FailureMsg == null)) { FailureMsg = ErrMsg; }            //    '(FailureMsg is passed ByRef)
-                if (!CommandLine.Quiet) { Interaction.ShowMsg(ErrMsg, "INVALID_CONFIG", MessageBoxButtons.OK, MessageBoxIcon.Exclamation); }
+                if (!(FailureMsg == null)) { FailureMsg = ErrMsg; }            //    '(FailureMsg is passed ByRef)
+               // if (!CommandLine.Quiet) { Interaction.ShowMsg(ErrMsg, "INVALID_CONFIG", MessageBoxButtons.OK, MessageBoxIcon.Exclamation); }
                 return false;
             }
             else
             {
-                if(WarnUnrootedPaths)
+                if (WarnUnrootedPaths)
                 {
-                    if(!Path.IsPathRooted(TranslatePath(GetSetting<string>(ProfileSetting.Source))))
-                    {
-                        if (Interaction.ShowMsg(Translation.TranslateFormat("\\LEFT_UNROOTED", Path.GetFullPath(GetSetting<string>(ProfileSetting.Source))), null, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
-                        {
-                            return false;
-                        }
-                    }
-                    if (!Path.IsPathRooted(TranslatePath(GetSetting<string>(ProfileSetting.Destination))))
-                    {
-                        if (Interaction.ShowMsg(Translation.TranslateFormat("\\RIGHT_UNROOTED", Path.GetFullPath(GetSetting<string>(ProfileSetting.Source))), null, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
-                        {
-                            return false;
-                        }
-                    }
+                    //if (!Path.IsPathRooted(TranslatePath(GetSetting<string>(ProfileSetting.Source))))
+                    //{
+                    //    if (Interaction.ShowMsg(Translation.TranslateFormat("\\LEFT_UNROOTED", Path.GetFullPath(GetSetting<string>(ProfileSetting.Source))), null, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
+                    //    {
+                    //        return false;
+                    //    }
+                    //}
+                    //if (!Path.IsPathRooted(TranslatePath(GetSetting<string>(ProfileSetting.Destination))))
+                    //{
+                    //    if (Interaction.ShowMsg(Translation.TranslateFormat("\\RIGHT_UNROOTED", Path.GetFullPath(GetSetting<string>(ProfileSetting.Source))), null, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
+                    //    {
+                    //        return false;
+                    //    }
+                    //}
                 }
                 return true;
             }
 
         }
 
-        public bool Rename(string  NewName)
+        public bool Rename(string NewName)
         {
-            if((! string.Equals(ProfileName, NewName, StringComparison.OrdinalIgnoreCase)) && (File.Exists(ProgramConfig.GetLogPath(NewName)) || File.Exists(ProgramConfig.GetErrorsLogPath(NewName)) || File.Exists(ProgramConfig.GetConfigPath(NewName))))
+            if ((!string.Equals(ProfileName, NewName, StringComparison.OrdinalIgnoreCase)) && (File.Exists(ProgramConfig.GetLogPath(NewName)) || File.Exists(ProgramConfig.GetErrorsLogPath(NewName)) || File.Exists(ProgramConfig.GetConfigPath(NewName))))
             {
                 return false;
             }
@@ -308,7 +309,7 @@ namespace CSSynChronicity
                 File.Move(ConfigPath, ProgramConfig.GetConfigPath(NewName));
                 ProfileName = NewName;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return false;
             }
@@ -333,15 +334,15 @@ namespace CSSynChronicity
             Configuration[SettingName] = Value.ToString();
         }
 
-        public void CopySetting<T>(string Key, T Value,bool Load)
+        public void CopySetting<T>(string Key, T Value, bool Load)
         {
-            if(Load)
+            if (Load)
             {
                 Value = GetSetting(Key, Value);
             }
             else
             {
-                Configuration[Key] = Value!= null? Value.ToString(): null;
+                Configuration[Key] = Value != null ? Value.ToString() : null;
             }
         }
 
@@ -349,15 +350,27 @@ namespace CSSynChronicity
         public T GetSetting<T>(string Key, T DefaultVal = default(T))
         {
             string Val = "";
-            if(Configuration.TryGetValue(Key,out Val) && !string.IsNullOrEmpty(Val))
+            if (Configuration.TryGetValue(Key,out Val) && !string.IsNullOrEmpty(Val))
             {
                 try
                 {
-                    return (T)(object)Val;
+
+                    //object mmm = (object)Val;
+                    //log.Info(Val + "; Val type is " + Val.GetType());
+                    //log.Info(Val + "; Val  is " + Val.ToString());
+                    //if(DefaultVal.GetType() is System.Int32)
+                    //{
+                    //    return (T)Convert.ChangeType(Val, typeof(T));
+                    //}
+
+                    return (T)Convert.ChangeType(Val, typeof(T));
                 }
-                catch
+                catch(Exception ex)
                 {
-                    SetSetting(Key, DefaultVal);
+                    SetSetting<T>(Key, DefaultVal);
+                    log.Info(Key+"; T type is " +DefaultVal.GetType());
+                    log.Error("GetSetting catch!"+ex.ToString());
+
                 }
             }
             return DefaultVal;
@@ -383,7 +396,7 @@ namespace CSSynChronicity
 
                 if (tempDir.EndsWith("*"))
                 {
-                    
+
                     Recursive = true;
                     tempDir = tempDir.Substring(0, tempDir.Length - 1);
                 }
@@ -393,11 +406,11 @@ namespace CSSynChronicity
             }
         }
 
-        public static string TranslatePath(string  Path )
+        public static string TranslatePath(string Path)
         {
             if (Path == "" || Path == null) return "";
             return TranslatePath_Unsafe(Path).TrimEnd(ProgramSetting.DirSep);// 'Careful with Linux root
-                // 'Prevents a very annoying bug, where the presence of a slash at the end of the base directory would confuse the engine (#3052979)
+                                                                             // 'Prevents a very annoying bug, where the presence of a slash at the end of the base directory would confuse the engine (#3052979)
         }
 
         public static string TranslatePath_Inverse(string Path)
@@ -420,22 +433,22 @@ namespace CSSynChronicity
 
 
 
-        public static string TranslatePath_Unsafe(string  Path )
+        public static string TranslatePath_Unsafe(string Path)
         {
             string Translated_Path = Path;
             string Label;
             string RelativePath;
-            if(Path.StartsWith(" ") || Path.StartsWith(":"))
+            if (Path.StartsWith(" ") || Path.StartsWith(":"))
             {
                 int ClosingPos = Path.LastIndexOfAny(":".ToCharArray());
                 if (ClosingPos == 0) return "";
                 Label = Path.Substring(1, ClosingPos - 1);
                 RelativePath = Path.Substring(ClosingPos + 1);
-                if (Path.StartsWith( " ") &&! (Label ==""))
+                if (Path.StartsWith(" ") && !(Label == ""))
                 {
                     foreach (DriveInfo Drive in DriveInfo.GetDrives())
                     {
-                        if(!(Drive.Name[0] =='A')&& Drive.IsReady && (String.Compare(Drive.VolumeLabel, Label, true) == 0) )
+                        if (!(Drive.Name[0] == 'A') && Drive.IsReady && (String.Compare(Drive.VolumeLabel, Label, true) == 0))
                         {
                             Translated_Path = (Drive.Name + RelativePath.TrimStart(ProgramSetting.DirSep)).TrimEnd(ProgramSetting.DirSep);
                             break;
@@ -444,7 +457,7 @@ namespace CSSynChronicity
                 }
             }
             //' Use a path-friendly version of the DATE constant.
-            System.Environment.SetEnvironmentVariable("MMMYYYY", DateTime.Today.ToString("MMMyyyy").ToLower(Interaction.InvariantCulture));
+            System.Environment.SetEnvironmentVariable("MMMYYYY", DateTime.Today.ToString("MMMyyyy").ToLower(System.Globalization.CultureInfo.InvariantCulture));
             System.Environment.SetEnvironmentVariable("DATE", DateTime.Today.ToShortDateString().Replace('/', '-'));
             System.Environment.SetEnvironmentVariable("DAY", DateTime.Today.ToString("dd"));
             System.Environment.SetEnvironmentVariable("MONTH", DateTime.Today.ToString("MM"));
@@ -463,35 +476,36 @@ namespace CSSynChronicity
             {
                 return GetSetting(ProfileSetting.LastRun, ScheduleInfo.DATE_NEVER);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return ScheduleInfo.DATE_NEVER;
             }
 
 
         }
+
         public void SetLastRun()
         {
             SetSetting(ProfileSetting.LastRun, DateTime.Now);
             SaveConfigFile();
         }
 
-        public string FormatLastRun(string Format ="")
+        public string FormatLastRun(string Format = "")
         {
             DateTime LastRun = GetLastRun();
-            return (LastRun == ScheduleInfo.DATE_NEVER? "-": Translation.TranslateFormat("\\LAST_SYNC", (DateTime.Now - LastRun).Days.ToString(Format), (DateTime.Now - LastRun).Hours.ToString(Format), LastRun.ToString()));
+            return (LastRun == ScheduleInfo.DATE_NEVER ? "-" : Translation.TranslateFormat("\\LAST_SYNC", (DateTime.Now - LastRun).Days.ToString(Format), (DateTime.Now - LastRun).Hours.ToString(Format), LastRun.ToString()));
         }
 
         public string FormatMethod()
         {
-            switch(GetSetting(ProfileSetting.Method, ProfileSetting.DefaultMethod))
+            switch (GetSetting(ProfileSetting.Method, ProfileSetting.DefaultMethod))
             {
                 case (int)ProfileSetting.SyncMethod.LRMirror:
                     return Translation.Translate("\\LR_MIRROR");
                 case (int)ProfileSetting.SyncMethod.BiIncremental:
                     return Translation.Translate("\\TWOWAYS_INCREMENTAL");
                 default:
-                        return Translation.Translate("\\LR_INCREMENTAL");
+                    return Translation.Translate("\\LR_INCREMENTAL");
             }
 
         }
@@ -499,123 +513,121 @@ namespace CSSynChronicity
 
     }
     public struct SchedulerEntry
-        {
-            public string Name;
+    {
+        public string Name;
         public DateTime NextRun;
         public bool CatchUp;
         public bool HasFailed;
 
-        public SchedulerEntry(string _Name, DateTime _NextRun, bool _Catchup, bool _HasFailed )
-            {
-                Name = _Name;
-                NextRun = _NextRun;
-                CatchUp = _Catchup;
-                HasFailed = _HasFailed;
-            }
+        public SchedulerEntry(string _Name, DateTime _NextRun, bool _Catchup, bool _HasFailed)
+        {
+            Name = _Name;
+            NextRun = _NextRun;
+            CatchUp = _Catchup;
+            HasFailed = _HasFailed;
         }
+    }
 
     public struct ScheduleInfo
+    {
+        public enum Freq
         {
-            public enum Freq
+            Never,
+            Daily,
+            Weekly,
+            Monthly
+        };
+
+        public Freq Frequency;
+        public int WeekDay, MonthDay, Hour, Minute;
+
+        public static readonly DateTime DATE_NEVER = DateTime.MaxValue;
+        public static readonly DateTime DATE_CATCHUP = DateTime.MinValue;
+
+        public ScheduleInfo(string Frq, string _WeekDay, string _MonthDay, string _Hour, string _Minute)
+        {
+            Frequency = Freq.Never;
+            Hour = 0;
+            Minute = 0;
+            WeekDay = 0;
+            MonthDay = 0;
+            try
             {
-                Never,
-                Daily,
-                Weekly,
-                Monthly
-            };
-
-            public Freq Frequency;
-            public int WeekDay, MonthDay, Hour, Minute;
-
-            public static readonly DateTime DATE_NEVER = DateTime.MaxValue;
-            public static readonly DateTime DATE_CATCHUP = DateTime.MinValue;
-
-            public ScheduleInfo(string Frq , string _WeekDay, string _MonthDay, string _Hour , string _Minute)
-            {
-                Frequency = Freq.Never;
-                Hour = 0;
-                Minute = 0;
-                WeekDay = 0;
-                MonthDay = 0;
-                try
-                {
-                    Hour = int.Parse(_Hour);
-                    Minute = int.Parse(_Minute);
-                    WeekDay = int.Parse(_WeekDay);
-                    MonthDay = int.Parse(_MonthDay);
-                    Frequency = Str2Freq(Frq);
-                }
-                catch (FormatException Ex)
-                { }
-                catch (OverflowException overEx)
-                { }
+                Hour = int.Parse(_Hour);
+                Minute = int.Parse(_Minute);
+                WeekDay = int.Parse(_WeekDay);
+                MonthDay = int.Parse(_MonthDay);
+                Frequency = Str2Freq(Frq);
             }
+            catch (FormatException Ex)
+            { }
+            catch (OverflowException overEx)
+            { }
+        }
 
 
-            private static Freq Str2Freq(string Str)
+        private static Freq Str2Freq(string Str)
+        {
+            try
             {
-                try
-                {
-                    return (Freq)Enum.Parse(typeof(Freq), Str);
-                }
-                catch (ArgumentException Ex)
-                {
-                    return Freq.Never;
-                }
-
+                return (Freq)Enum.Parse(typeof(Freq), Str);
             }
-
-            public TimeSpan GetInterval()
+            catch (ArgumentException Ex)
             {
-                TimeSpan Interval=new TimeSpan(0);
-                switch (Frequency)
-                {
-                    case Freq.Daily:
-                        Interval = new TimeSpan(1, 0, 0, 0);
-                        break;
-
-                    case Freq.Weekly:
-                        Interval = new TimeSpan(7, 0, 0, 0);
-                        break;
-                    case Freq.Monthly:
-                        Interval = DateTime.Today.AddMonths(1) - DateTime.Today;
-                        break;
-                    case Freq.Never:
-                        Interval = new TimeSpan(0);
-                        break;
-                    default:
-                        break;
-                }
-                return Interval;
-            }
-
-            public DateTime NextRun()
-            {
-                DateTime Now = DateTime.Now;
-                DateTime Today = DateTime.Today;
-                DateTime RunAt;
-                TimeSpan Interval = GetInterval();
-                switch(Frequency)
-                {
-                    case Freq.Daily:
-                        RunAt = Today.AddHours(Hour).AddMinutes(Minute);
-                        break;
-                    case Freq.Weekly:
-                        RunAt = Today.AddDays(WeekDay -(int) Today.DayOfWeek).AddHours(Hour).AddMinutes(Minute);
-                        break;
-                    case Freq.Monthly:
-                        RunAt = Today.AddDays(MonthDay - Today.Day).AddHours(Hour).AddMinutes(Minute);
-                        break;
-                    default:
-                        return DATE_NEVER;
-                        break;
-
-                }
-                return RunAt;
+                return Freq.Never;
             }
 
         }
-   
+
+        public TimeSpan GetInterval()
+        {
+            TimeSpan Interval = new TimeSpan(0);
+            switch (Frequency)
+            {
+                case Freq.Daily:
+                    Interval = new TimeSpan(1, 0, 0, 0);
+                    break;
+
+                case Freq.Weekly:
+                    Interval = new TimeSpan(7, 0, 0, 0);
+                    break;
+                case Freq.Monthly:
+                    Interval = DateTime.Today.AddMonths(1) - DateTime.Today;
+                    break;
+                case Freq.Never:
+                    Interval = new TimeSpan(0);
+                    break;
+                default:
+                    break;
+            }
+            return Interval;
+        }
+
+        public DateTime NextRun()
+        {
+            DateTime Now = DateTime.Now;
+            DateTime Today = DateTime.Today;
+            DateTime RunAt;
+            TimeSpan Interval = GetInterval();
+            switch (Frequency)
+            {
+                case Freq.Daily:
+                    RunAt = Today.AddHours(Hour).AddMinutes(Minute);
+                    break;
+                case Freq.Weekly:
+                    RunAt = Today.AddDays(WeekDay - (int)Today.DayOfWeek).AddHours(Hour).AddMinutes(Minute);
+                    break;
+                case Freq.Monthly:
+                    RunAt = Today.AddDays(MonthDay - Today.Day).AddHours(Hour).AddMinutes(Minute);
+                    break;
+                default:
+                    return DATE_NEVER;
+            }
+            return RunAt;
+        }
+
+    }
+
 }
 
 

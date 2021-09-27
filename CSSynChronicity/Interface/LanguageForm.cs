@@ -30,6 +30,7 @@ namespace CSSynChronicity.Interface
             if(LanguagesList.SelectedIndex !=-1)
             {
                 ProgramConfig.SetProgramSetting(ProgramSetting.Language, LanguagesList.SelectedItem.ToString().Split('-')[0].Trim());
+                ProgramConfig.SaveProgramSettings();
             }
         }
     }

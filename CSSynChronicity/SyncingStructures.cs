@@ -194,7 +194,7 @@ namespace CSSynChronicity
 
         private static string Unbox(string Str)
         {
-            return Str.Substring(1, Str.Length - 2).ToLower(Interaction.InvariantCulture);// ' ToLower: Careful on linux ; No need to check that length > 2 here: IsBoxed already has.
+            return Str.Substring(1, Str.Length - 2).ToLower(System.Globalization.CultureInfo.InvariantCulture);// ' ToLower: Careful on linux ; No need to check that length > 2 here: IsBoxed already has.
         }
 
 
@@ -205,7 +205,7 @@ namespace CSSynChronicity
             else if (IsBoxed('/', Str)) // 'Regex
                 return new FileNamePattern(PatternType.Regex, Unbox(Str));
             else
-                return new FileNamePattern(PatternType.FileExt, Str.ToLower(Interaction.InvariantCulture));
+                return new FileNamePattern(PatternType.FileExt, Str.ToLower(System.Globalization.CultureInfo.InvariantCulture));
             
          }
 

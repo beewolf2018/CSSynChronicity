@@ -11,6 +11,9 @@ namespace CSSynChronicity
     {
         public static LanguageHandler Singleton;
         public static ConfigHandler ProgramConfig =  ConfigHandler.GetSingleton();
+        public Dictionary<string, string> Strings ;
+
+
         public struct LangInfo
         {
             public List<string> CodeNames;
@@ -34,12 +37,12 @@ namespace CSSynChronicity
         {
             ProgramConfig.LoadProgramSettings();
             Directory.CreateDirectory(ProgramConfig.LanguageRootDir);
-            Dictionary<string, string>  Strings = new Dictionary<string, string>();
+            Strings = new Dictionary<string, string>();
             string DictFile = GetLanguageFilePath(ProgramConfig.GetProgramSetting(ProgramSetting.Language, ProgramSetting.DefaultLanguage));
             if(!File.Exists(DictFile))
             {
                 DictFile = GetLanguageFilePath(ProgramSetting.DefaultLanguage);
-                Interaction.ShowMsg("No language file found!");
+                //Interaction.ShowMsg("No language file found!");
             }
             else
             {
@@ -57,7 +60,7 @@ namespace CSSynChronicity
                         }
                         catch(ArgumentException ex)
                         {
-                            Interaction.ShowDebug("Duplicate line in translation: " + Line);
+                            //("Duplicate line in translation: " + Line);
                         }
                     }
                 }
@@ -66,10 +69,10 @@ namespace CSSynChronicity
         }
        public static LanguageHandler GetSingleton(bool Reload  = false)
         {
-            if( Reload || (Singleton is  null)) { Singleton = new LanguageHandler(); }
+            if( Reload | (Singleton ==  null)) { Singleton = new LanguageHandler(); }
                 return Singleton;
         }
-        Dictionary<string, string> Strings = new Dictionary<string, string>();
+
         public string Translate(string  Code,string  DefaultValue = "")
         {
             if (Code is null || Code == "") return DefaultValue;
@@ -154,7 +157,7 @@ namespace CSSynChronicity
                     {
                         string[] CurLanguage = PropsReader.ReadLine().Split(";".ToCharArray());
                         if (CurLanguage.Length != 3) continue;
-                        LanguagesInfo.Add(CurLanguage[0], new LangInfo() { NativeName = CurLanguage[1], CodeNames = new List<string>(CurLanguage[2].ToLower(Interaction.InvariantCulture).Split('/')) });
+                        LanguagesInfo.Add(CurLanguage[0], new LangInfo() { NativeName = CurLanguage[1], CodeNames = new List<string>(CurLanguage[2].ToLower(System.Globalization.CultureInfo.InvariantCulture).Split('/')) });
                     }
                 }
             }
@@ -176,7 +179,7 @@ namespace CSSynChronicity
                 {
                     LanguageHandler.LangInfo Info = LanguagesInfo[EnglishName];
                     NewItemText = String.Format("{0} - {1} ({2})", EnglishName, Info.NativeName, Info.CodeNames[0]);
-                    if (Info.CodeNames.Contains(CurrentCulture.Name.ToLower(Interaction.InvariantCulture))) SystemLanguageItem = NewItemText;
+                    if (Info.CodeNames.Contains(CurrentCulture.Name.ToLower(System.Globalization.CultureInfo.InvariantCulture))) SystemLanguageItem = NewItemText;
                 }
                 LanguagesComboBox.Items.Add(NewItemText);
 

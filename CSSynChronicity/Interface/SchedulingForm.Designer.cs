@@ -58,7 +58,7 @@
             this.WarningLabel.Location = new System.Drawing.Point(12, 9);
             this.WarningLabel.Name = "WarningLabel";
             this.WarningLabel.Padding = new System.Windows.Forms.Padding(2);
-            this.WarningLabel.Size = new System.Drawing.Size(745, 52);
+            this.WarningLabel.Size = new System.Drawing.Size(745, 50);
             this.WarningLabel.TabIndex = 1;
             this.WarningLabel.Text = "\\SCHEDULE_WARNING";
             this.WarningLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -72,7 +72,7 @@
             this.OptionsLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.OptionsLayoutPanel.Controls.Add(this.Catchup, 1, 0);
             this.OptionsLayoutPanel.Controls.Add(this.Enable, 0, 0);
-            this.OptionsLayoutPanel.Location = new System.Drawing.Point(14, 64);
+            this.OptionsLayoutPanel.Location = new System.Drawing.Point(14, 62);
             this.OptionsLayoutPanel.Name = "OptionsLayoutPanel";
             this.OptionsLayoutPanel.RowCount = 1;
             this.OptionsLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
@@ -104,6 +104,7 @@
             this.Enable.TabIndex = 1;
             this.Enable.Text = "\\SCHEDULE_ENABLE";
             this.Enable.UseVisualStyleBackColor = true;
+            this.Enable.CheckedChanged += new System.EventHandler(this.Enable_CheckedChanged_1);
             // 
             // FrequencyLayoutPanel
             // 
@@ -203,7 +204,7 @@
             this.TimeSelectionPanel.Controls.Add(this.AtLabel);
             this.TimeSelectionPanel.Controls.Add(this.Time);
             this.TimeSelectionPanel.Enabled = false;
-            this.TimeSelectionPanel.Location = new System.Drawing.Point(14, 179);
+            this.TimeSelectionPanel.Location = new System.Drawing.Point(14, 177);
             this.TimeSelectionPanel.Name = "TimeSelectionPanel";
             this.TimeSelectionPanel.Size = new System.Drawing.Size(344, 31);
             this.TimeSelectionPanel.TabIndex = 8;
@@ -238,7 +239,7 @@
             this.ActionsPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.ActionsPanel.Controls.Add(this.Cancel, 1, 0);
             this.ActionsPanel.Controls.Add(this.Save, 0, 0);
-            this.ActionsPanel.Location = new System.Drawing.Point(399, 179);
+            this.ActionsPanel.Location = new System.Drawing.Point(399, 177);
             this.ActionsPanel.Name = "ActionsPanel";
             this.ActionsPanel.RowCount = 1;
             this.ActionsPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
@@ -257,6 +258,7 @@
             this.Cancel.TabIndex = 1;
             this.Cancel.Text = "\\CANCEL";
             this.Cancel.UseVisualStyleBackColor = true;
+            this.Cancel.Click += new System.EventHandler(this.Cancel_Click);
             // 
             // Save
             // 
@@ -275,7 +277,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(769, 302);
+            this.ClientSize = new System.Drawing.Size(769, 300);
             this.Controls.Add(this.ActionsPanel);
             this.Controls.Add(this.TimeSelectionPanel);
             this.Controls.Add(this.FrequencyLayoutPanel);

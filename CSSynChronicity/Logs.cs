@@ -230,7 +230,7 @@ namespace CSSynChronicity
                 }
                 catch (Exception Ex)
                 {
-                    Interaction.ShowMsg(Translation.Translate(@"\LOGFILE_WRITE_ERROR") + Environment.NewLine + Ex.Message + Environment.NewLine + Environment.NewLine + Ex.ToString());
+                    //Interaction.ShowMsg(Translation.Translate(@"\LOGFILE_WRITE_ERROR") + Environment.NewLine + Ex.Message + Environment.NewLine + Environment.NewLine + Ex.ToString());
                 }
 
                 finally
@@ -242,7 +242,7 @@ namespace CSSynChronicity
             }
             catch (Exception Ex)
             {
-                Interaction.ShowMsg(Translation.Translate(@"\LOGFILE_OPEN_ERROR") + Environment.NewLine + Ex.Message + Environment.NewLine + Environment.NewLine + Ex.ToString());
+                //Interaction.ShowMsg(Translation.Translate(@"\LOGFILE_OPEN_ERROR") + Environment.NewLine + Ex.Message + Environment.NewLine + Environment.NewLine + Ex.ToString());
             }
         }
     }

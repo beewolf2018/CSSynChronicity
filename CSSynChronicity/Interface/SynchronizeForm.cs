@@ -8,11 +8,15 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using CSSynChronicity;
+using log4net;
 
 namespace CSSynChronicity.Interface
 {
     public partial class SynchronizeForm : Form
     {
+        ILog log;
+
+
         private LogHandler Log;
         private ProfileHandler Handler;
 
@@ -52,6 +56,10 @@ namespace CSSynChronicity.Interface
 
         public SynchronizeForm(string ConfigName, bool DisplayPreview, bool _Catchup)
         {
+            log4net.Config.XmlConfigurator.Configure();
+            log = LogManager.GetLogger(typeof(SynchronizeForm));
+            log.Info("SynchronizeForm程序初始化开始!");
+
             // This call is required by the Windows Form Designer.
             InitializeComponent();
 
@@ -88,6 +96,7 @@ namespace CSSynChronicity.Interface
             TitleText = string.Format(this.Text, Handler.ProfileName, LeftRootPath, RightRootPath);
 
             Labels = new string[] { "", Step1StatusLabel.Text, Step2StatusLabel.Text, Step3StatusLabel.Text };
+            //this.Hide();
         }
 
         public void StartSynchronization(bool CalledShowModal)
@@ -97,17 +106,6 @@ namespace CSSynChronicity.Interface
             if (CommandLine.Quiet)
             {
                 this.Visible = false;
-
-                Interaction.StatusIcon.ContextMenuStrip = null;
-                Interaction.StatusIcon.Click += StatusIcon_Click;
-
-                Interaction.StatusIcon.Text = Translation.Translate(@"\RUNNING");
-
-                Interaction.ToggleStatusIcon(true);
-                if (Catchup)
-                    Interaction.ShowBalloonTip(Translation.TranslateFormat(@"\CATCHING_UP", Handler.ProfileName, Handler.FormatLastRun()));
-                else
-                    Interaction.ShowBalloonTip(Translation.TranslateFormat(@"\RUNNING_TASK", Handler.ProfileName));
             }
             else if (!CalledShowModal)
                 this.Visible = true;
@@ -156,7 +154,7 @@ namespace CSSynChronicity.Interface
         private void AddValidFile(string File)
         {
             if (!IsValidFile(File))
-                ValidFiles.Add(File.ToLower(Interaction.InvariantCulture), true/* TODO Change to default(_) if this is not a reference type */);
+                ValidFiles.Add(File.ToLower(System.Globalization.CultureInfo.InvariantCulture), true/* TODO Change to default(_) if this is not a reference type */);
         }
         private void AddValidAncestors(string Folder)
         {
@@ -175,12 +173,12 @@ namespace CSSynChronicity.Interface
         private void RemoveValidFile(string File)
         {
             if (IsValidFile(File))
-                ValidFiles.Remove(File.ToLower(Interaction.InvariantCulture));
+                ValidFiles.Remove(File.ToLower(System.Globalization.CultureInfo.InvariantCulture));
         }
 
         private bool IsValidFile(string File)
         {
-            return ValidFiles.ContainsKey(File.ToLower(Interaction.InvariantCulture));
+            return ValidFiles.ContainsKey(File.ToLower(System.Globalization.CultureInfo.InvariantCulture));
         }
 
         private void PopSyncingList(SideOfSource Side)
@@ -344,7 +342,7 @@ namespace CSSynChronicity.Interface
 
             DateTime SourceFATTime = NTFSToFATTime(System.IO.File.GetLastWriteTimeUtc(AbsSource)).AddHours(Handler.GetSetting<int>(ProfileSetting.TimeOffset, 0));
             DateTime DestFATTime = NTFSToFATTime(System.IO.File.GetLastWriteTimeUtc(AbsDest));
-            Log.LogInfo(string.Format("SourceIsMoreRecent: S:({0}, {1}); D:({2}, {3})", Interaction.FormatDate(System.IO.File.GetLastWriteTimeUtc(AbsSource)), Interaction.FormatDate(SourceFATTime), Interaction.FormatDate(System.IO.File.GetLastWriteTimeUtc(AbsDest)), Interaction.FormatDate(DestFATTime)));
+            //Log.LogInfo(string.Format("SourceIsMoreRecent: S:({0}, {1}); D:({2}, {3})", Interaction.FormatDate(System.IO.File.GetLastWriteTimeUtc(AbsSource)), Interaction.FormatDate(SourceFATTime), Interaction.FormatDate(System.IO.File.GetLastWriteTimeUtc(AbsDest)), Interaction.FormatDate(DestFATTime)));
 
             if (Handler.GetSetting<bool>(ProfileSetting.FuzzyDstCompensation, false))
             {
@@ -1030,7 +1028,7 @@ namespace CSSynChronicity.Interface
                     Step2StatusLabel.Text = Labels[2];
                     Step3StatusLabel.Text = Labels[3];
                 }
-                Interaction.StatusIcon.Text = StatusLabel;
+                //Interaction.StatusIcon.Text = StatusLabel;
             }
 
             int PercentProgress;
@@ -1078,13 +1076,13 @@ namespace CSSynChronicity.Interface
                 try
                 {
                     Environment.CurrentDirectory = Application.StartupPath;
-                    Interaction.ShowBalloonTip(string.Format(Translation.Translate(@"\POST_SYNC"), PostSyncAction));
+                    //Interaction.ShowBalloonTip(string.Format(Translation.Translate(@"\POST_SYNC"), PostSyncAction));
                     System.Diagnostics.Process.Start(PostSyncAction, string.Format("\"{0}\" \"{1}\" \"{2}\" \"{3}\" \"{4}\" \"{5}\"", Handler.ProfileName, !(Status.Cancel | Status.Failed), Log.Errors.Count, LeftRootPath, RightRootPath, Handler.ErrorsLogPath));
                 }
                 catch (Exception Ex)
                 {
                     string Err = Translation.Translate(@"\POSTSYNC_FAILED") + Environment.NewLine + Ex.Message;
-                    Interaction.ShowBalloonTip(Err);
+                    //Interaction.ShowBalloonTip(Err);
                     ProgramConfig.LogAppEvent(Err);
                 }
             }
@@ -1128,7 +1126,7 @@ namespace CSSynChronicity.Interface
                         UpdateStatuses(); // Last update, to remove forecasts.
 
                         if (Status.Failed)
-                            Interaction.ShowBalloonTip(Status.FailureMsg);
+                            log.Error(Status.FailureMsg);
                         else if (Log.Errors.Count > 0)
                         {
                             PreviewList.Visible = true;
@@ -1146,10 +1144,10 @@ namespace CSSynChronicity.Interface
                             PreviewList.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
 
                             if (!Status.Cancel)
-                                Interaction.ShowBalloonTip(Translation.TranslateFormat(@"\SYNCED_W_ERRORS", Handler.ProfileName), Handler.LogPath);
+                                log.Error(Translation.TranslateFormat(@"\SYNCED_W_ERRORS", Handler.ProfileName)+ Handler.LogPath);
                         }
                         else if (!Status.Cancel)
-                            Interaction.ShowBalloonTip(Translation.TranslateFormat(@"\SYNCED_OK", Handler.ProfileName), Handler.LogPath);
+                            log.Info(Translation.TranslateFormat(@"\SYNCED_OK", Handler.ProfileName)+ Handler.LogPath);
 
                         Log.SaveAndDispose(LeftRootPath, RightRootPath, Status);
                         if (!(Status.Failed | Status.Cancel))

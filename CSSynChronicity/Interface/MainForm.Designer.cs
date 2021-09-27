@@ -29,9 +29,9 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.ListViewGroup listViewGroup1 = new System.Windows.Forms.ListViewGroup("\\ACTIONS", System.Windows.Forms.HorizontalAlignment.Left);
-            System.Windows.Forms.ListViewGroup listViewGroup2 = new System.Windows.Forms.ListViewGroup("\\PROFILES", System.Windows.Forms.HorizontalAlignment.Left);
-            System.Windows.Forms.ListViewItem listViewItem1 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.ListViewGroup listViewGroup3 = new System.Windows.Forms.ListViewGroup("\\ACTIONS", System.Windows.Forms.HorizontalAlignment.Left);
+            System.Windows.Forms.ListViewGroup listViewGroup4 = new System.Windows.Forms.ListViewGroup("\\PROFILES", System.Windows.Forms.HorizontalAlignment.Left);
+            System.Windows.Forms.ListViewItem listViewItem2 = new System.Windows.Forms.ListViewItem(new string[] {
             "\\NEW_PROFILE_LABEL",
             "\\NEW_PROFILE"}, 3);
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
@@ -72,7 +72,9 @@
             this.ApplicationTimer = new System.Windows.Forms.Timer(this.components);
             this.StatusIconMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.ToolStripHeader = new System.Windows.Forms.ToolStripMenuItem();
+            this.languageSelectionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ExitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.csNotifyicon = new System.Windows.Forms.NotifyIcon(this.components);
             this.InfoPanel.SuspendLayout();
             this.ActionsMenu.SuspendLayout();
             this.StatusIconMenu.SuspendLayout();
@@ -85,22 +87,22 @@
             this.MethodsColumn,
             this.LastRunColumn});
             this.Actions.Dock = System.Windows.Forms.DockStyle.Fill;
-            listViewGroup1.Header = "\\ACTIONS";
-            listViewGroup1.Name = "Actions";
-            listViewGroup2.Header = "\\PROFILES";
-            listViewGroup2.Name = "Profiles";
+            listViewGroup3.Header = "\\ACTIONS";
+            listViewGroup3.Name = "Actions";
+            listViewGroup4.Header = "\\PROFILES";
+            listViewGroup4.Name = "Profiles";
             this.Actions.Groups.AddRange(new System.Windows.Forms.ListViewGroup[] {
-            listViewGroup1,
-            listViewGroup2});
+            listViewGroup3,
+            listViewGroup4});
             this.Actions.HideSelection = false;
-            listViewItem1.Group = listViewGroup1;
+            listViewItem2.Group = listViewGroup3;
             this.Actions.Items.AddRange(new System.Windows.Forms.ListViewItem[] {
-            listViewItem1});
+            listViewItem2});
             this.Actions.LargeImageList = this.SyncIcons;
             this.Actions.Location = new System.Drawing.Point(0, 0);
             this.Actions.MultiSelect = false;
             this.Actions.Name = "Actions";
-            this.Actions.Size = new System.Drawing.Size(450, 632);
+            this.Actions.Size = new System.Drawing.Size(763, 632);
             this.Actions.TabIndex = 0;
             this.Actions.TileSize = new System.Drawing.Size(160, 40);
             this.Actions.UseCompatibleStateImageBehavior = false;
@@ -151,7 +153,7 @@
             this.InfoPanel.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.InfoPanel.Location = new System.Drawing.Point(0, 464);
             this.InfoPanel.Name = "InfoPanel";
-            this.InfoPanel.Size = new System.Drawing.Size(450, 168);
+            this.InfoPanel.Size = new System.Drawing.Size(763, 168);
             this.InfoPanel.TabIndex = 1;
             // 
             // Destination
@@ -297,7 +299,7 @@
             this.TipsLabel.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.TipsLabel.Location = new System.Drawing.Point(0, 431);
             this.TipsLabel.Name = "TipsLabel";
-            this.TipsLabel.Size = new System.Drawing.Size(450, 33);
+            this.TipsLabel.Size = new System.Drawing.Size(763, 33);
             this.TipsLabel.TabIndex = 4;
             this.TipsLabel.Text = "\\NO_PROFILES";
             this.TipsLabel.Visible = false;
@@ -316,7 +318,7 @@
             this.ScheduleMenuItem,
             this.ClearLogMenuItem});
             this.ActionsMenu.Name = "ActionsMenu";
-            this.ActionsMenu.Size = new System.Drawing.Size(196, 214);
+            this.ActionsMenu.Size = new System.Drawing.Size(196, 192);
             // 
             // PreviewMenuItem
             // 
@@ -339,6 +341,7 @@
             this.ChangeSettingsMenuItem.Name = "ChangeSettingsMenuItem";
             this.ChangeSettingsMenuItem.Size = new System.Drawing.Size(195, 22);
             this.ChangeSettingsMenuItem.Text = "\\CHANGE_SETTINGS";
+            this.ChangeSettingsMenuItem.Click += new System.EventHandler(this.ChangeSettingsMenuItem_Click);
             // 
             // toolStripSeparator1
             // 
@@ -351,6 +354,7 @@
             this.DeleteToolStripMenuItem.Name = "DeleteToolStripMenuItem";
             this.DeleteToolStripMenuItem.Size = new System.Drawing.Size(195, 22);
             this.DeleteToolStripMenuItem.Text = "\\DELETE";
+            this.DeleteToolStripMenuItem.Click += new System.EventHandler(this.DeleteToolStripMenuItem_Click);
             // 
             // RenameMenuItem
             // 
@@ -358,6 +362,7 @@
             this.RenameMenuItem.Name = "RenameMenuItem";
             this.RenameMenuItem.Size = new System.Drawing.Size(195, 22);
             this.RenameMenuItem.Text = "\\RENAME";
+            this.RenameMenuItem.Click += new System.EventHandler(this.RenameMenuItem_Click);
             // 
             // ViewLogMenuItem
             // 
@@ -387,40 +392,60 @@
             // 
             // ApplicationTimer
             // 
+            this.ApplicationTimer.Interval = 60000;
             this.ApplicationTimer.Tick += new System.EventHandler(this.ApplicationTimer_Tick);
             // 
             // StatusIconMenu
             // 
             this.StatusIconMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.ToolStripHeader,
+            this.languageSelectionToolStripMenuItem,
             this.ExitToolStripMenuItem});
             this.StatusIconMenu.Name = "StatusIconMenu";
-            this.StatusIconMenu.Size = new System.Drawing.Size(194, 48);
+            this.StatusIconMenu.Size = new System.Drawing.Size(190, 70);
             // 
             // ToolStripHeader
             // 
             this.ToolStripHeader.Name = "ToolStripHeader";
-            this.ToolStripHeader.Size = new System.Drawing.Size(193, 22);
-            this.ToolStripHeader.Text = "Create Synchronicity";
+            this.ToolStripHeader.Size = new System.Drawing.Size(189, 22);
+            this.ToolStripHeader.Text = "File Synchronicity";
             this.ToolStripHeader.Click += new System.EventHandler(this.ToolStripHeader_Click);
+            // 
+            // languageSelectionToolStripMenuItem
+            // 
+            this.languageSelectionToolStripMenuItem.Name = "languageSelectionToolStripMenuItem";
+            this.languageSelectionToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
+            this.languageSelectionToolStripMenuItem.Text = "Language Selection";
+            this.languageSelectionToolStripMenuItem.Click += new System.EventHandler(this.languageSelectionToolStripMenuItem_Click);
             // 
             // ExitToolStripMenuItem
             // 
             this.ExitToolStripMenuItem.Name = "ExitToolStripMenuItem";
-            this.ExitToolStripMenuItem.Size = new System.Drawing.Size(193, 22);
-            this.ExitToolStripMenuItem.Text = " ";
+            this.ExitToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
+            this.ExitToolStripMenuItem.Text = "Exit";
+            this.ExitToolStripMenuItem.Click += new System.EventHandler(this.ExitToolStripMenuItem_Click);
+            // 
+            // csNotifyicon
+            // 
+            this.csNotifyicon.ContextMenuStrip = this.StatusIconMenu;
+            this.csNotifyicon.Icon = ((System.Drawing.Icon)(resources.GetObject("csNotifyicon.Icon")));
+            this.csNotifyicon.Text = "File Synchronicity";
+            this.csNotifyicon.Visible = true;
+            this.csNotifyicon.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.csNotifyicon_MouseDoubleClick);
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(450, 632);
+            this.ClientSize = new System.Drawing.Size(763, 632);
             this.Controls.Add(this.TipsLabel);
             this.Controls.Add(this.InfoPanel);
             this.Controls.Add(this.Actions);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
             this.Name = "MainForm";
-            this.Text = "CSharp Synchronicity";
+            this.ShowInTaskbar = false;
+            this.Text = "File Synchronicity";
+            this.WindowState = System.Windows.Forms.FormWindowState.Minimized;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.Load += new System.EventHandler(this.MainForm_Load);
             this.InfoPanel.ResumeLayout(false);
@@ -471,5 +496,7 @@
         public System.Windows.Forms.ToolStripMenuItem ClearLogMenuItem;
         public System.Windows.Forms.ToolStripMenuItem ToolStripHeader;
         public System.Windows.Forms.Label SchedulingLabel;
+        public System.Windows.Forms.ToolStripMenuItem languageSelectionToolStripMenuItem;
+        public System.Windows.Forms.NotifyIcon csNotifyicon;
     }
 }

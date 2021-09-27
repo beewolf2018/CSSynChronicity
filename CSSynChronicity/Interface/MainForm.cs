@@ -1,41 +1,45 @@
-﻿using System;
+﻿using log4net;
+using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+using System.Globalization;
 using System.IO;
+using System.Windows.Forms;
 
 namespace CSSynChronicity.Interface
 {
     public partial class MainForm : Form
     {
+        ILog log;
         public int CurView;
         public List<string> ProfilesGroups = new List<string>();
         View[] Views = new View[] { View.Tile, View.Details, View.LargeIcon };
         ConfigHandler ProgramConfig = ConfigHandler.GetSingleton();
         LanguageHandler Translation = LanguageHandler.GetSingleton();
+        MessageLoop Loop = MessageLoop.GetSingleton();
         public static Dictionary<string, ProfileHandler> Profiles;
         bool ReloadNeeded;
         public MainForm()
         {
+            log4net.Config.XmlConfigurator.Configure();
+            log = LogManager.GetLogger(typeof(MainForm));
+            log.Info("MainForm程序初始化开始!");
+
+
             InitializeComponent();
             List<string> WindowSettings = new List<string>(ProgramConfig.GetProgramSetting(ProgramSetting.MainFormAttributes, "").Split(','));
             try
             {
                 List<int> Values = new List<int>();
-                WindowSettings.ForEach(Elem =>  Values.Add(System.Convert.ToInt32(Elem)));
-                if(Values.Count ==4 && Values.TrueForAll(BetweenWithValue))
+                WindowSettings.ForEach(Elem => Values.Add(System.Convert.ToInt32(Elem)));
+                if (Values.Count == 4 && Values.TrueForAll(BetweenWithValue))
                 {
                     this.Location = new System.Drawing.Point(Values[0], Values[1]);
                     this.Size = new System.Drawing.Size(Values[2], Values[3]);
                     this.StartPosition = FormStartPosition.Manual;
                 }
             }
-            catch(Exception ex) {            }
+            catch (Exception ex) { }
 
             ReloadNeeded = false;
 
@@ -58,10 +62,10 @@ namespace CSSynChronicity.Interface
             //AboutLinkLabel.Width = NewWidth
             //AboutLinkLabel.Location += New Drawing.Size(PreviousWidth - AboutLinkLabel.Width, 0)
         }
-        
+
         private void BuildIcons()
         {
-            for (int i = 0; i < this.SyncIcons.Images.Count - 2;i++ )
+            for (int i = 0; i < this.SyncIcons.Images.Count - 2; i++)
             {
                 Bitmap NewImg = new Bitmap(32, 32);
                 Graphics Painter = Graphics.FromImage(NewImg);
@@ -110,18 +114,18 @@ namespace CSSynChronicity.Interface
             Source.Text = Profiles[Name].GetSetting<string>(ProfileSetting.Source);
             Destination.Text = Profiles[Name].GetSetting<string>(ProfileSetting.Destination);
 
-            Scheduling.Text = Translation.Translate(@"\" + Profiles[Name].Scheduler.Frequency.ToString().ToUpper(Interaction.InvariantCulture));
+            Scheduling.Text = Translation.Translate(@"\" + Profiles[Name].Scheduler.Frequency.ToString().ToUpper(CultureInfo.InvariantCulture));
 
             switch (Profiles[Name].Scheduler.Frequency)
             {
-                case  ScheduleInfo.Freq.Weekly:
+                case ScheduleInfo.Freq.Weekly:
                     {
                         string Day = Translation.Translate(@"\WEEK_DAYS", ";;;;;;").Split(';')[Profiles[Name].Scheduler.WeekDay];
                         Scheduling.Text += Day;
                         break;
                     }
 
-                case  ScheduleInfo.Freq.Monthly:
+                case ScheduleInfo.Freq.Monthly:
                     {
                         Scheduling.Text += Profiles[Name].Scheduler.MonthDay;
                         break;
@@ -187,7 +191,7 @@ namespace CSSynChronicity.Interface
         private void Actions_MouseClick(object sender, MouseEventArgs e)
         {
             if (Actions.SelectedItems.Count == 0) return;
-            if(Actions.SelectedIndices[0]==0)
+            if (Actions.SelectedIndices[0] == 0)
             {
                 Actions.LabelEdit = true;
                 Actions.SelectedItems[0].BeginEdit();
@@ -202,7 +206,7 @@ namespace CSSynChronicity.Interface
         {
             Actions.LabelEdit = false;
 
-            if(e.Label =="" || e.Label.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+            if (e.Label is null || e.Label.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
             {
                 e.CancelEdit = true;
                 return;
@@ -236,20 +240,75 @@ namespace CSSynChronicity.Interface
 
         private void ToolStripHeader_Click(object sender, EventArgs e)
         {
-
+            //this.WindowState = FormWindowState.Maximized;
+            this.WindowState = FormWindowState.Normal;
+            this.Activate();
+            this.Show();
         }
 
         private void ApplicationTimer_Tick(object sender, EventArgs e)
         {
+            //log.Info("ApplicationTimer_Tick.");
+            //csNotifyicon.ShowBalloonTip(1000, "Scheduling_Tick", "Good good good girl.", ToolTipIcon.None);
+            //ApplicationTimer.Stop();
+            if (ProgramConfig.CanGoOn == false) { return; }// 'Don't start next sync yet.
 
+            //Loop.ReloadScheduledProfiles();
+            if (Loop.ScheduledProfiles.Count == 0)
+            {
+                //log.Info("Scheduler: No profiles left to run.");
+                //Application.Exit();
+                return;
+            }
+
+            else if (Loop.ScheduledProfiles.Count > 0)
+            {
+
+                //ApplicationTimer.Stop();
+                SchedulerEntry NextInQueue = Loop.ScheduledProfiles[0];
+                string Status = Translation.TranslateFormat("\\SCH_WAITING", NextInQueue.Name, (NextInQueue.NextRun == ScheduleInfo.DATE_CATCHUP ? "..." : NextInQueue.NextRun.ToString()));
+                //Interaction.StatusIcon.Text = Status.Length >= 64 ? Status.Substring(0, 63) : Status;
+
+                if (DateTime.Compare(NextInQueue.NextRun, DateTime.Now) <= 0)
+                {
+                    ApplicationTimer.Stop();
+                    log.Info("ApplicationTimer.Stop()");
+                    csNotifyicon.ShowBalloonTip(5000, "ScheduledProfiles", "开始同步.", ToolTipIcon.None);
+                    log.Info("Scheduler: Launching " + NextInQueue.Name);
+                    SynchronizeForm SyncForm = new SynchronizeForm(NextInQueue.Name, false, NextInQueue.CatchUp);
+                    SyncForm.SyncFinished += ScheduledProfileCompleted;
+                    Loop.ScheduledProfiles.RemoveAt(0);
+                    SyncForm.StartSynchronization(false);
+                    ApplicationTimer.Start();
+                    log.Info("ApplicationTimer.Start()");
+                }
+            }
         }
+
+        public void ScheduledProfileCompleted(string ProfileName, bool Completed)
+        {
+            if (Completed)
+            {
+                log.Info("Scheduler: " + ProfileName + " completed successfully.");
+                if (Profiles.ContainsKey(ProfileName))
+                    Loop.ScheduledProfiles.Add(new SchedulerEntry(ProfileName, Profiles[ProfileName].Scheduler.NextRun(), false, false));
+            }
+            else
+            {
+                log.Info("Scheduler: " + ProfileName + " reported an error, and will run again in 4 hours."); // If ProfileName has been removed, ReloadScheduledProfiles will unschedule it.
+                Loop.ScheduledProfiles.Add(new SchedulerEntry(ProfileName, DateTime.Now.AddHours(4), true, true));
+            }
+            ApplicationTimer.Start();
+            log.Info("ApplicationTimer.Start()");
+        }
+
 
         private void ScheduleMenuItem_Click(object sender, EventArgs e)
         {
             SchedulingForm SchedForm = new SchedulingForm(CurrentProfile());
             SchedForm.ShowDialog();
             ReloadProfilesList();
-            MessageLoop.RedoSchedulerRegistration();
+            Loop.RedoSchedulerRegistration();
         }
 
         private string CurrentProfile()
@@ -264,7 +323,7 @@ namespace CSSynChronicity.Interface
                 return;
             ListViewItem CreateProfileItem = Actions.Items[0];
 
-            MessageLoop.ReloadProfiles();
+            Loop.ReloadProfiles();
             Profiles = MessageLoop.Profiles;
             Actions.Items.Clear();
             Actions.Items.Add(CreateProfileItem).Group = Actions.Groups[0];
@@ -295,15 +354,20 @@ namespace CSSynChronicity.Interface
 
             TipsLabel.Visible = (Profiles.Count == 0 & TipsLabel.Text != "");
             TipsLabel.Text = string.Format(TipsLabel.Text, Translation.Translate(@"\NEW_PROFILE_LABEL"));
-            
+
         }
 
         private void MainForm_Load(object sender, EventArgs e)
         {
+            ApplicationTimer.Start();
+            log.Info("ApplicationTimer.Start() ");
             ReloadProfilesList();
-            MessageLoop.RedoSchedulerRegistration();
+            Loop.RedoSchedulerRegistration();
             SetView(ProgramConfig.GetProgramSetting<int>(ProgramSetting.MainView, 0));
             SetFont(ProgramConfig.GetProgramSetting<int>(ProgramSetting.FontSize, System.Convert.ToInt32(Actions.Font.Size)));
+            Loop.ReloadScheduledProfiles();
+            log.Info("Loop.ReloadScheduledProfiles over ");
+
         }
         public void SetView(int Offset)
         {
@@ -322,10 +386,22 @@ namespace CSSynChronicity.Interface
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            string WindowAttributes = string.Format("{0},{1},{2},{3}", this.Location.X, this.Location.Y, this.Size.Width, this.Size.Height);
-            ProgramConfig.SetProgramSetting<string>(ProgramSetting.MainFormAttributes, WindowAttributes);
-            ProgramConfig.SetProgramSetting<int>(ProgramSetting.MainView, CurView);
-            ProgramConfig.SetProgramSetting<float>(ProgramSetting.FontSize, Actions.Font.Size);
+            //the fellowing four col code from origin software.
+            //string WindowAttributes = string.Format("{0},{1},{2},{3}", this.Location.X, this.Location.Y, this.Size.Width, this.Size.Height);
+            //ProgramConfig.SetProgramSetting<string>(ProgramSetting.MainFormAttributes, WindowAttributes);
+            //ProgramConfig.SetProgramSetting<int>(ProgramSetting.MainView, CurView);
+            //ProgramConfig.SetProgramSetting<float>(ProgramSetting.FontSize, Actions.Font.Size);
+
+            if (e.CloseReason == CloseReason.UserClosing)
+            {
+                e.Cancel = true;
+                Loop.ReloadScheduledProfiles();
+                this.ApplicationTimer.Start();
+                
+                HideMainForm();
+                return;
+            }
+
         }
 
         private void SynchronizeMenuItem_Click(object sender, EventArgs e)
@@ -334,7 +410,11 @@ namespace CSSynChronicity.Interface
                 return;
 
             SynchronizeForm SyncForm = new SynchronizeForm(CurrentProfile(), false, false);
-            SetVisible(false); SyncForm.StartSynchronization(true); SyncForm.ShowDialog(); SetVisible(true);
+            SetVisible(false);
+            SyncForm.StartSynchronization(true);
+            //SyncForm.StartSynchronization(false);
+            SyncForm.ShowDialog();
+            SetVisible(true);
             SyncForm.Dispose();
         }
         public void SetVisible(bool Status)
@@ -348,12 +428,66 @@ namespace CSSynChronicity.Interface
         {
             if (!Profiles[CurrentProfile()].ValidateConfigFile(true, true))
             {
-                Interaction.ShowMsg(Translation.Translate(@"\INVALID_CONFIG"), Translation.Translate(@"\ERROR"), MessageBoxButtons.OK, MessageBoxIcon.Error);
+                //Interaction.ShowMsg(Translation.Translate(@"\INVALID_CONFIG"), Translation.Translate(@"\ERROR"), MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
             return true;
         }
 
+        private void ExitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Application.Exit();
+        }
 
+        private void DeleteToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (true)
+            //if (Interaction.ShowMsg(Translation.TranslateFormat(@"\DELETE_PROFILE", CurrentProfile()), Translation.Translate(@"\CONFIRM_DELETION"), MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            {
+                Profiles[CurrentProfile()].DeleteConfigFile();
+                Profiles[CurrentProfile()] = null;
+                Actions.Items.RemoveAt(Actions.SelectedIndices[0]);
+                TipsLabel.Visible = (Actions.Items.Count == 1);
+            }
+        }
+
+        private void RenameMenuItem_Click(object sender, EventArgs e)
+        {
+            Actions.LabelEdit = true;
+            Actions.SelectedItems[0].BeginEdit();
+        }
+
+        private void csNotifyicon_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            ShowMainForm();
+        }
+
+        private void ShowMainForm()
+        {
+            this.Show();
+            this.WindowState = FormWindowState.Normal;
+            this.Activate();
+        }
+
+        private void HideMainForm()
+        {
+            this.Hide();
+        }
+
+        private void languageSelectionToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            csNotifyicon.ShowBalloonTip(1000, "Config Language", "Good boy.", ToolTipIcon.None);
+            LanguageForm Lng = new LanguageForm();
+            Lng.ShowDialog();
+            Translation = LanguageHandler.GetSingleton(true);
+            csNotifyicon.ShowBalloonTip(1000, "Config Language", "Good girl.", ToolTipIcon.None);
+        }
+
+        private void ChangeSettingsMenuItem_Click(object sender, EventArgs e)
+        {
+            SettingsForm SettingsForm = new SettingsForm(CurrentProfile(), ProfilesGroups);
+            SettingsForm.ShowDialog();
+            ReloadProfilesList();
+        }
     }
 }

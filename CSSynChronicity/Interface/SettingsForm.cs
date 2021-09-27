@@ -12,6 +12,22 @@ using System.IO;
 
 namespace CSSynChronicity.Interface
 {
+
+    //   'Note:
+    //'The list called Handler.(left|right)CheckedNodes contains pathes not ending with "*", associated with booleans indicating whether all subfolders /path/ are to be synced.
+    //'The boolean value is stored as a * appended at the end of the file name.
+    //'In fact, we have two steps : 
+    //'   1. Loading and saving the file
+    //'       1.1 Saving: Booleans calculated as "*"
+    //'       2.2 Loading: "*" are converted to booleans 
+    //'   2. Searching the list, were pathes never end with "*"
+    //'The 'Tag' Property is used as a flag denoting that the treenode originally had all its subnodes checked.
+    //'
+    //'Careful: When calling Update(False), the Handler.Left/RightCheckNodes object is used to hold pathes containing * chars. Therefore, trying to reload the tree from it after invoking Update(False) cannot be done.
+
+    //'Path handling: Always trim traliing path separator chars: it makes everything much simpler. Only exception: '/' in Linux
+
+
     public partial class SettingsForm : Form
     {       
         ProfileHandler Handler;
